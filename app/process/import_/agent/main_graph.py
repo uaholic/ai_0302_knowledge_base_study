@@ -15,19 +15,19 @@ from app.shared.runtime.logger import logger
 load_dotenv()
 
 # 1. 定义状态图和指定状态类型
-main_graph = StateGraph(ImportGraphState)
+builder = StateGraph(ImportGraphState)
 # 2. 添加图节点
-main_graph.add_node("node_entry",node_entry)
-main_graph.add_node("node_pdf_to_md",node_pdf_to_md)
-main_graph.add_node("node_md_img",node_md_img)
-main_graph.add_node("node_document_split",node_document_split)
-main_graph.add_node("node_item_name_recognition",node_item_name_recognition)
-main_graph.add_node("node_bge_embedding",node_bge_embedding)
-main_graph.add_node("node_import_milvus",node_import_milvus)
+builder.add_node("node_entry", node_entry)
+builder.add_node("node_pdf_to_md", node_pdf_to_md)
+builder.add_node("node_md_img", node_md_img)
+builder.add_node("node_document_split", node_document_split)
+builder.add_node("node_item_name_recognition", node_item_name_recognition)
+builder.add_node("node_bge_embedding", node_bge_embedding)
+builder.add_node("node_import_milvus", node_import_milvus)
 
 # 3. 添加起始节点 + 条件边
 # main_graph.add_edge(START,"node_entry" )
-main_graph.set_entry_point("node_entry")
+builder.set_entry_point("node_entry")
 
 
 def node_entry_after(state: ImportGraphState) -> str:
@@ -61,19 +61,19 @@ def node_entry_after(state: ImportGraphState) -> str:
         场景1: 路由函数返回的字符串是某种标识 而非节点名
         场景2: 我们想静态打印图的结构
 """
-main_graph.add_conditional_edges("node_entry",
-                                 node_entry_after ,
-                                 {
+builder.add_conditional_edges("node_entry",
+                              node_entry_after,
+                              {
                                      "node_md_img":"node_md_img",
                                      "node_pdf_to_md":"node_pdf_to_md",
                                      END:END
                                  })
 
 # 4. 添加静态边
-main_graph.add_edge("node_pdf_to_md", "node_md_img")
-main_graph.add_edge("node_md_img", "node_document_split")
-main_graph.add_edge("node_document_split", "node_item_name_recognition")
-main_graph.add_edge("node_item_name_recognition", "node_bge_embedding")
-main_graph.add_edge("node_bge_embedding", "node_import_milvus")
+builder.add_edge("node_pdf_to_md", "node_md_img")
+builder.add_edge("node_md_img", "node_document_split")
+builder.add_edge("node_document_split", "node_item_name_recognition")
+builder.add_edge("node_item_name_recognition", "node_bge_embedding")
+builder.add_edge("node_bge_embedding", "node_import_milvus")
 # 5. 编译图对象
-kb_import_app = main_graph.compile()
+kb_import_app = builder.compile()
