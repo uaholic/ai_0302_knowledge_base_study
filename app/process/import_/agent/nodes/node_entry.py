@@ -55,27 +55,27 @@ if __name__ == '__main__':
     result_1 = node_entry(test_state1)
     print(f"第一次测试结果: \n {json.dumps(result_1, indent=4, ensure_ascii=False)}")
     # 测试2: MD文件
-    test_state2 = create_default_state(
-        task_id="test_task_002",
-        local_file_path="小米用户手册.md"
-    )
-    result_2 = node_entry(test_state2)
-    print(f"第二次测试结果: \n {json.dumps(result_2, indent=4, ensure_ascii=False)}")
-    # 测试3: PDF文件
-    test_state3 = create_default_state(
-        task_id="test_task_003",
-        local_file_path="万用表的使用.pdf"
-    )
-    result_3 = node_entry(test_state3)
-
-    print(f"第三次测试结果: \n {json.dumps(result_3, indent=4, ensure_ascii=False)}")
-
-    # 测试4: 没有传入local_file_path
-    test_state4 = create_default_state(
-        task_id="test_task_004"
-    )
-    result_4 = node_entry(test_state4)
-
-    print(f"第四次测试结果: \n {json.dumps(result_4, indent=4, ensure_ascii=False)}")
-
-    logger.info("===== 结束node_entry节点单元测试 =====")
+    # test_state2 = create_default_state(
+    #     task_id="test_task_002",
+    #     local_file_path="小米用户手册.md"
+    # )
+    # result_2 = node_entry(test_state2)
+    # print(f"第二次测试结果: \n {json.dumps(result_2, indent=4, ensure_ascii=False)}")
+    # # 测试3: PDF文件
+    # test_state3 = create_default_state(
+    #     task_id="test_task_003",
+    #     local_file_path="万用表的使用.pdf"
+    # )
+    # result_3 = node_entry(test_state3)
+    #
+    # print(f"第三次测试结果: \n {json.dumps(result_3, indent=4, ensure_ascii=False)}")
+    #
+    # # 测试4: 没有传入local_file_path
+    # test_state4 = create_default_state(
+    #     task_id="test_task_004"
+    # )
+    # result_4 = node_entry(test_state4)
+    #
+    # print(f"第四次测试结果: \n {json.dumps(result_4, indent=4, ensure_ascii=False)}")
+    #
+    # logger.info("===== 结束node_entry节点单元测试 =====")
