@@ -1,3 +1,4 @@
+import shutil
 import time
 
 import requests
@@ -7,7 +8,7 @@ from pathlib import Path
 
 from app.rag.import_.config import MINERU_MODEL_VERSION, MINERU_DOWNLOAD_TIMEOUT_SECONDS, MINERU_POLL_TIMEOUT_SECONDS, \
     MINERU_POLL_INTERVAL_SECONDS
-from app.shared.runtime.logger import logger , PROJECT_ROOT
+from app.shared.runtime.logger import logger, PROJECT_ROOT, step_log
 from app.infra.config.providers import infra_config
 
 #   validate_pdf_paths(state: ImportState) -> tuple[Path pdf_path_obj, Path local_dir_path_obj]
@@ -20,6 +21,7 @@ from app.infra.config.providers import infra_config
 #         7. 返回 `pdf_path_obj` 与 `local_dir_obj`
 
 # 1. pdf dir路径校验和完善
+@step_log("validate_pdf_paths")
 def validate_pdf_paths(state: ImportGraphState) -> tuple[Path, Path]:
     """
     路径参数校验
@@ -61,6 +63,7 @@ def validate_pdf_paths(state: ImportGraphState) -> tuple[Path, Path]:
 #        5. 若任务成功，返回 `full_zip_url`
 #        6. 若任务失败或超时，抛出异常
 
+@step_log("upload_pdf_and_poll")
 def upload_pdf_and_poll(pdf_path_obj:Path) -> str:
     """
        minerU交互
@@ -186,26 +189,51 @@ def upload_pdf_and_poll(pdf_path_obj:Path) -> str:
         time.sleep(interval_time)
 
 
-
-
-    token = "官网申请的api token"
-    batch_id = "上一步批量提交返回的 batch_id"
-    url = f"https://mineru.net/api/v4/extract-results/batch/{batch_id}"
-    header = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {token}"
-    }
-
-    res = requests.get(url, headers=header)
-    print(res.status_code)
-    print(res.json())
-    print(res.json()["data"])
-
-
     #        5. 若任务成功，返回 `full_zip_url`
     #        6. 若任务失败或超时，抛出异常
+@step_log("download_and_extract_markdown")
+def download_and_extract_markdown(zip_url:str,local_dir_path_obj:Path,stem:str) -> Path:
+    response = requests.get(zip_url,timeout=MINERU_DOWNLOAD_TIMEOUT_SECONDS)
+    if response.status_code != 200:
+        logger.error(f"下载zip文件路径{zip_url}发生异常,状态码:{response.status_code},业务无法继续!!")
+        raise RuntimeError(f"下载zip文件路径{zip_url}发生异常,状态码:{response.status_code},业务无法继续!!")
 
+    zip_path_obj = local_dir_path_obj / f"{stem}_result.zip"
+    # 把返回写成zip文件
+    zip_path_obj.write_bytes(response.content)
 
+    zip_extract_dir_obj =  local_dir_path_obj / stem
+
+    if zip_extract_dir_obj.exists():
+        shutil.rmtree(zip_extract_dir_obj)
+
+    zip_extract_dir_obj.mkdir(parents=True,exist_ok=True)
+    # 解压
+    shutil.unpack_archive(zip_path_obj,zip_extract_dir_obj)
+    # 在解压目录中递归查找
+    md_file_obj_list = list(zip_extract_dir_obj.rglob("*.md"))
+    if not md_file_obj_list or len(md_file_obj_list) == 0:
+        logger.error(f"从{zip_url}下载后解压到{zip_extract_dir_obj}目录下没有找到md文件,业务无法继续!!")
+        raise RuntimeError(f"从{zip_url}下载后解压到{zip_extract_dir_obj}目录下没有找到md文件,业务无法继续!!")
+
+    for md_file_obj in md_file_obj_list:
+        if md_file_obj.stem == stem:
+            logger.info(f"解压的文件名为原文件名:{md_file_obj.name}，无需额外处理")
+            return md_file_obj
+
+    target_md_obj = None
+    for md_file_obj in md_file_obj_list:
+        if md_file_obj.name.lower()=="full.md":
+            target_md_obj = md_file_obj
+            break
+
+    if not target_md_obj:
+        target_md_obj = md_file_obj_list[0]
+        logger.warning(f"从{zip_url}下载后解压到{zip_extract_dir_obj}目录下没有找到{stem}.md文件和full.md文件，默认选择第一个文件:{target_md_obj.name}!!")
+
+    return target_md_obj.rename(target_md_obj.with_name(stem+".md"))
+
+@step_log("parse_pdf_to_markdown")
 def parse_pdf_to_markdown(state: ImportGraphState) -> ImportGraphState:
     """
     PDF 解析服务：
@@ -219,6 +247,13 @@ def parse_pdf_to_markdown(state: ImportGraphState) -> ImportGraphState:
 
     # 2. pdf上传和zip url地址获取
     zip_url = upload_pdf_and_poll(pdf_path_obj)
+
+    # 3. 下载解压并返回md
+    md_path_obj = download_and_extract_markdown(zip_url, local_dir_obj, pdf_path_obj.stem)
+
+    # 4. 修改state 状态。md_path
+    state['md_content'] = md_path_obj.read_text(encoding="utf-8")
+    state['md_path'] = str(md_path_obj)
 
     print(zip_url)
     return state
