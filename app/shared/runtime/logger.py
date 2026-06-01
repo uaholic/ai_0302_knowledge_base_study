@@ -14,6 +14,8 @@ import sys
 import inspect
 from pathlib import Path
 import os
+from pprint import pformat
+
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -119,8 +121,16 @@ def node_log(node_name: str):
             trace_id = _trace_id(state)
             start_ts = time.time()
             logger.info(f"[{node_name}] 节点开始，追踪ID={trace_id}")
+            logger.debug(
+                f"[{node_name}] 入参 state，追踪ID={trace_id}：\n"
+                f"{pformat(state, width=120)}"
+            )
             try:
                 result = func(state, *args, **kwargs)
+                logger.debug(
+                    f"[{node_name}] 返回 result，追踪ID={trace_id}：\n"
+                    f"{pformat(result, width=120)}"
+                )
                 cost_ms = int((time.time() - start_ts) * 1000)
                 logger.info(f"[{node_name}] 节点完成，追踪ID={trace_id}，耗时={cost_ms}ms")
                 return result
