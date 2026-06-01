@@ -68,6 +68,11 @@ def enrich_markdown_images(state: ImportGraphState) -> ImportGraphState:
 
     md_content, md_path_obj, img_path = load_md_and_img_dir(state)
 
-    result = scan_images(md_content, img_path)
+    if not any(img_path.iterdir()):
+        # 空文件夹
+        logger.warning(f"当前{md_content}没有图片,无需图片处理!正常进入下一个节点!!")
+        return state
+
+    scan_images(md_content, img_path)
 
     return state
