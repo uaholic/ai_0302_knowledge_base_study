@@ -50,7 +50,7 @@ def scan_images(md_content: str, img_path: Path, context_length: int = 100) -> l
             logger.warning(f"当前文件{str(img_file)}不是图片，跳过")
             continue
 
-        reg = re.compile(r"\!\[.*?\]\(.*?" + re.escape(img_file.name) + ".*?\)")
+        reg = re.compile(r"\!\[.*?\]\(.*?" + re.escape(img_file.name) + r".*?\)")
         match = reg.search(md_content)
 
         if not match:
@@ -143,7 +143,7 @@ def update_images_and_replace(image_context_list: list[tuple[str, str, tuple[str
     # 循环处理每一张图片 替换 md_content 图片地址
     for image_name,image_url in image_minio_url_dict.items():
         image_summary = image_summary_dict[image_name]
-        reg = re.compile(r"\!\[.*?\]\(.*?" + re.escape(image_name) + ".*?\)")
+        reg = re.compile(r"\!\[.*?\]\(.*?" + re.escape(image_name) + r".*?\)")
         # md_content = reg.sub(f"![{image_summary}]({image_url})", md_content)
         # 解决 替换内容中存在/1 /2 等分组符号问题的 小技巧
         md_content = reg.sub(lambda _ : f"![{image_summary}]({image_url})", md_content)
