@@ -1,7 +1,15 @@
+import base64
+import mimetypes
 import re
 from pathlib import Path
+from tkinter import image_names
+from typing import Dict
 
+from langchain_core.messages import HumanMessage
+
+from app.infra.llm.providers import llm_provider
 from app.process.import_.agent.state import ImportGraphState
+from app.shared.runtime.load_prompt import load_prompt
 from app.shared.runtime.logger import logger
 
 
@@ -55,6 +63,37 @@ def scan_images(md_content: str, img_path: Path,context_length: int = 100)->list
 
     return result
 
+# 使用视觉模型对图片进行意图识别
+def summarize_images(image_context_list:list[tuple[str, str,tuple[str,str]]],stem:str)->dict[str, str]:
+    vision_model = llm_provider.vision_chat()
+    image_summary_dict:Dict[str, str] = {}
+    for img_name, img_path, (pre_context, post_context) in image_context_list:
+        image_summary_prompt = load_prompt("image_summary", root_folder=stem, image_content=(pre_context, post_context))
+        image_path_obj=Path(img_path)
+        image_base64_str = base64.b64encode(image_path_obj.read_bytes()).decode(encoding="utf-8")
+        human_message = HumanMessage(
+            content = [
+                {
+                    "type":"image_url",
+                    "image_url":{
+                        "url":f"data:{mimetypes.guess_type(img_name)[0]};base64,{image_base64_str}"
+                    },
+                },
+                {
+                    "type":"text",
+                    "text":image_summary_prompt,
+                }
+            ]
+        )
+        resp = vision_model.invoke([human_message])
+        image_summary = resp.content
+        image_summary_dict[img_name] = image_summary
+
+    logger.info(f"图片识别结果：{image_summary_dict}")
+    return image_summary_dict
+
+
+
 
 
 def enrich_markdown_images(state: ImportGraphState) -> ImportGraphState:
@@ -73,6 +112,8 @@ def enrich_markdown_images(state: ImportGraphState) -> ImportGraphState:
         logger.warning(f"当前{md_content}没有图片,无需图片处理!正常进入下一个节点!!")
         return state
 
-    scan_images(md_content, img_path)
+    img_list_md = scan_images(md_content, img_path)
+
+    images_info = summarize_images(img_list_md, md_path_obj.stem)
 
     return state
