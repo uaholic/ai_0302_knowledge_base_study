@@ -20,9 +20,10 @@ class MinioGateway:
 
         return (
             f"{protocol}://{infra_config.minio.endpoint}/{self.bucket_name}"
-            f"{self.image_dir}/{stem}/{object_name}"
+            f"/{self.image_dir}/{stem}/{object_name}"
         )
 
+minio_gateway = MinioGateway()
 
 if __name__ == '__main__':
     url = MinioGateway().build_image_url("test", "test.png")
