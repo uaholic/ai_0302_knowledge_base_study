@@ -34,7 +34,7 @@ def load_md_and_img_dir(state: ImportGraphState) -> tuple[str, Path, Path]:
             logger.error(f"从 {md_path} 读取 md_content 失败")
             raise ValueError(f"从 {md_path} 读取 md_content 失败")
         # 老师没加这行，但是感觉应该加
-        # state['md_content'] = md_content 老师说在最后加 应该是考虑后面改造方便
+        state['md_content'] = md_content
     img_path = md_path_obj.parent / "images"
     return md_content, md_path_obj, img_path
 
