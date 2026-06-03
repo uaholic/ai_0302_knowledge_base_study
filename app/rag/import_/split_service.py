@@ -32,6 +32,11 @@ def split_by_title(md_content: str, file_title: str) -> list[dict]:
 
     for line in md_content.split("\n"):
 
+        if not line.strip():
+            logger.warning(f"当前行为空行，跳过")
+            continue
+
+
         strip_line = line.lstrip()
         if strip_line.startswith("```") or strip_line.startswith("~~~"):
             cur_content.append(line)
@@ -55,7 +60,7 @@ def split_by_title(md_content: str, file_title: str) -> list[dict]:
                     continue
                 chunks.append({
                     "title": cur_title,
-                    "content": cur_content,
+                    "content": "\n".join(cur_content),
                     "file_title": file_title,
                 })
                 cur_title = line

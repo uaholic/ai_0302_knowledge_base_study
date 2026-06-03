@@ -34,6 +34,6 @@ if __name__ == '__main__':
             "md_content": "",
             "file_title": "",
         }
-        logger.info("开始本地测试 - MD图片处理全流程")
+        logger.info("开始本地测试 - MD切分处理全流程")
         result_state = node_document_split(test_state)
         logger.info(f"本地测试完成 - 处理结果状态：{result_state}")
