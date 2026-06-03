@@ -166,3 +166,4 @@ doc/
 logs/
 .idea
 output
+.DS_Store
