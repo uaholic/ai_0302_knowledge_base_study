@@ -26,3 +26,6 @@ def get_reranker_model() -> FlagReranker:
         )
         logger.success("重排模型初始化成功")
     return _reranker_model
+
+if __name__ == '__main__':
+    get_reranker_model()

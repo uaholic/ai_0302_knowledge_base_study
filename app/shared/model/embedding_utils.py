@@ -117,4 +117,10 @@ def generate_embeddings(texts: list[str]) -> dict[str, list]:
         logger.error(f"文本向量生成失败：{str(e)}", exc_info=True)
         raise  # 不吞异常，向上传递让调用方做重试/降级处理
 
-
+if __name__ == '__main__':
+    get_bge_m3_ef()
+    result = generate_embeddings(["测试向量生成"])
+    print("dense数量:", len(result["dense"]))
+    print("dense维度:", len(result["dense"][0]))
+    print("sparse数量:", len(result["sparse"]))
+    print("sparse示例:", list(result["sparse"][0].items())[:10])
