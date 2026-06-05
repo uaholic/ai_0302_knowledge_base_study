@@ -74,7 +74,7 @@ def split_by_title(md_content: str, file_title: str) -> list[dict]:
     if cur_title and any(line.strip() for line in cur_content):
         chunks.append({
             "title": cur_title,
-            "content": cur_content,
+            "content": "\n".join(cur_content),
             "file_title": file_title,
         })
 

@@ -19,3 +19,7 @@ CHUNK_OVERLAP = 50
 ITEM_NAME_CONTEXT_CHUNK_K =5
 # 主体识别上下文总字符数上限：防止上下文过长导致大模型输入超限
 ITEM_NAME_CONTEXT_TOTAL_MAX_CHARS = 10000
+
+# chunks批量生成向量的数量!
+# 数量 content 窗口大小
+EMBEDDING_BATCH_SIZE = 5
