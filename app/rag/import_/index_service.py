@@ -58,7 +58,7 @@ def prepare_chunks_collection():
         index_name="dense_vector_index",
         metric_type="COSINE",
         params={
-            "M": 64,  # Maximum number of neighbors each node can connect to in the graph
+            "M": 64,  # Maximum number of neighbors each nodes can connect to in the graph
             "efConstruction": 100  # Number of candidate neighbors considered for connection during index construction
         }
     )
