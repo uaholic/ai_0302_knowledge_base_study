@@ -116,7 +116,7 @@ def update_images_and_replace(image_context_list: list[tuple[str, str, tuple[str
     client = minio_gateway.client
     list_object = client.list_objects(
         bucket_name=minio_gateway.bucket_name,
-        prefix=f"{minio_gateway.image_dir}",
+        prefix=f"{minio_gateway.image_dir}/{stem}",
         recursive=True,
     )
     delete_object_list = [DeleteObject(obj.object_name) for obj in list_object]
@@ -124,7 +124,7 @@ def update_images_and_replace(image_context_list: list[tuple[str, str, tuple[str
     for error in errors:
         # 这里 必须要遍历 因为是生成器 不然删除不执行
         logger.error(f"[MinIO] 删除 失败 error:{error}")
-    logger.info(f"[MinIO] 删除 {minio_gateway.bucket_name} 下 {minio_gateway.image_dir} 下的所有图片")
+    logger.info(f"[MinIO] 删除 {minio_gateway.bucket_name} 下 {minio_gateway.image_dir}/{stem} 下的所有图片")
 
     # 循环上传每一张图片到minio的服务器
     image_minio_url_dict: Dict[str, str] = {}
