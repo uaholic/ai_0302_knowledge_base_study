@@ -30,16 +30,6 @@ def generate_answer(state: QueryGraphState) -> QueryGraphState:
             push_to_session(session_id, SSEEvent.DELTA, {"delta": ch})
             time.sleep(0.03)
 
-        image_urls = ["https://example.com/demo-1.png", "https://example.com/demo-2.png"]
-        push_to_session(
-            session_id,
-            SSEEvent.FINAL,
-            {
-                "answer": final_text,
-                "status": "completed",
-                "image_urls": image_urls
-            }
-        )
         logger.info(f"流式输出完成，总长度: {len(final_text)}")
     else:
         final_text = base_answer
@@ -49,6 +39,6 @@ def generate_answer(state: QueryGraphState) -> QueryGraphState:
     # 关键点：return 必须保留 session_id！
     return {
         "session_id": session_id,  # 必须带回去
-        "answer": "你的回答内容",
+        "answer": final_text,
         "is_stream": state.get("is_stream")
     }
