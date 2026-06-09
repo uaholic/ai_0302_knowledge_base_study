@@ -8,14 +8,14 @@ from app.shared.runtime.load_prompt import load_prompt
 from app.shared.runtime.logger import logger
 
 
-def validate_state(state: QueryGraphState)->tuple[str, str]:
+def validate_state(state: QueryGraphState)->tuple[str, list[str]]:
     rewritten_query = state["rewritten_query"]
     item_names = state["item_names"]
     if not rewritten_query:
         raise ValueError("rewritten_query is empty")
     if not item_names or len(item_names) == 0:
         raise ValueError("item_names is empty")
-    return rewritten_query, item_names[0]
+    return rewritten_query, item_names
 
 
 def llm_hyde_ans(rewritten_query):
@@ -29,11 +29,11 @@ def llm_hyde_ans(rewritten_query):
     return resp
 
 
-def query_hyde_from_milvus(item_name, rewritten_query, hyde_answer):
+def query_hyde_from_milvus(item_names, rewritten_query, hyde_answer):
     embed_result = llm_provider.embed_documents([rewritten_query + hyde_answer])
     dense_vector = embed_result["dense"][0]
     sparse_vector = embed_result["sparse"][0]
-    ann_request_list = milvus_gateway.create_requests(dense_vector, sparse_vector, expr=f"item_name='{item_name}'")
+    ann_request_list = milvus_gateway.create_requests(dense_vector, sparse_vector, expr=f"item_name in {item_names}")
     search_result = milvus_gateway.hybrid_search(collection_name=milvus_gateway.chunk_collection_name,
                                                  reqs=ann_request_list, norm_score=True,
                                                  output_fields=["chunk_id", "title", "parent_title", "file_title",
@@ -55,7 +55,6 @@ def query_hyde_from_milvus(item_name, rewritten_query, hyde_answer):
         "type": "milvus",  # 来源类型（向量库）
         "url": None,  # 附件URL（无）
     } for item in result]
-
     return result_dict
 
 
@@ -67,7 +66,7 @@ def search_by_hyde(state: QueryGraphState) -> QueryGraphState:
     3. 用答案向量在 Milvus 中检索真实文档
     4. 回写 hyde_embedding_chunks
     """
-    rewritten_query,item_name = validate_state(state)
+    rewritten_query,item_names = validate_state(state)
     hyde_answer = llm_hyde_ans(rewritten_query)
-    state["hyde_embedding_chunks"] = query_hyde_from_milvus(item_name,rewritten_query,hyde_answer)
+    state["hyde_embedding_chunks"] = query_hyde_from_milvus(item_names,rewritten_query,hyde_answer)
     return state
