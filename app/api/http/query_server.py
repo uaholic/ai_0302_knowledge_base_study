@@ -7,7 +7,9 @@ from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
 
-from app.api.schema.query_schema import QueryRequestParam, QueryStreamResponse, QueryNotStreamResponse
+from app.api.schema.query_schema import QueryRequestParam, QueryStreamResponse, QueryNotStreamResponse, \
+    HistoryCleanResponse, HistoryResponse, HistoryItemResponse
+from app.infra.persistence.history_repository import history_repository
 from app.shared.runtime.logger import PROJECT_ROOT, logger
 from app.infra.config.providers import settings
 from app.process.query.agent.main_graph import query_graph_app
@@ -151,6 +153,38 @@ def query(backgroundtasks:BackgroundTasks,request:QueryRequestParam):
             done_list=get_done_task_list(session_id),
             image_urls=final_state.get("image_urls")
         )
+
+# 清空历史对话记录
+@app.delete("/history/{session_id}")
+def remove_history(session_id:str):
+    delete_count = history_repository.clear_session(session_id=session_id)
+    logger.info(f"清空:{session_id}对应的历史记录!清空数量:{delete_count}")
+    return HistoryCleanResponse(
+        message=f"清空:{session_id}对应的历史记录!清空数量:{delete_count}",
+        deleted_count=delete_count
+    )
+
+@app.get("/history/{session_id}")
+def get_history(session_id:str,limit:int = 10):
+
+    message_list =  history_repository.list_recent(session_id=session_id,limit=limit)
+    logger.info(f"完成:{session_id}对应的历史记录查询!查询的数据数量:{len(message_list)}")
+    return HistoryResponse(
+        session_id=session_id,
+        items=[
+              HistoryItemResponse(
+                  id=str(message.get("_id")),
+                  session_id=message.get("session_id"),
+                  role=message.get("role"),
+                  text=message.get("text"),
+                  rewritten_query=message.get("rewritten_query"),
+                  item_names = message.get("item_names"),
+                  image_urls = message.get("image_urls"),
+                  ts =message.get("ts")
+              )
+              for message in  message_list
+        ]
+    )
 
 if __name__ == "__main__":
     import uvicorn
