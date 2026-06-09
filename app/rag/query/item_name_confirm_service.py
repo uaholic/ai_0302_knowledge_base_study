@@ -50,7 +50,7 @@ def query_item_name_in_milvus(item_names: list[str]) -> dict[str, list[dict]]:
         dense_vector = llm_result["dense"][0]
         sparse_vector = llm_result["sparse"][0]
         ann_request_list = milvus_gateway.create_requests(dense_vector, sparse_vector, limit=10)
-        search_result = milvus_gateway.hybrid_search(ccollection_name=milvus_gateway.item_collection_name,
+        search_result = milvus_gateway.hybrid_search(collection_name=milvus_gateway.item_collection_name,
                                                      reqs=ann_request_list, ranker_weights=(0.4, 0.6), norm_score=True,
                                                      limit=5)
         real_result = search_result[0]
@@ -171,8 +171,8 @@ def confirm_item_name(state: QueryGraphState) -> QueryGraphState:
     item_name_result = deal_by_llm(history_messages_text, original_query)
 
     final_result = {}
-    if len(item_name_result["item_name"]) > 0:
-        query_result = query_item_name_in_milvus(item_name_result['item_name'])
+    if len(item_name_result["item_names"]) > 0:
+        query_result = query_item_name_in_milvus(item_name_result['item_names'])
         final_result = select_item_list(query_result)
 
     change_state(state, final_result, item_name_result['rewritten_query'])

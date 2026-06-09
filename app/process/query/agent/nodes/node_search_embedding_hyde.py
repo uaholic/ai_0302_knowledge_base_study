@@ -14,5 +14,5 @@ def node_search_embedding_hyde(state):
     state = search_by_hyde(state)
     add_done_task(state["session_id"], sys._getframe().f_code.co_name, state.get("is_stream"))
     return {
-        "hyde_embedding_chunks":[]
+        "hyde_embedding_chunks":state["hyde_embedding_chunks"]
     }

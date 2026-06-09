@@ -90,8 +90,7 @@ def invoke_query_graph(session_id:str,query:str,is_stream:bool=False):
 
         logger.info(f"执行结束,执行结果为:{result_state}")
         update_task_status(session_id,TASK_STATUS_COMPLETED,is_stream)
-        image_urls = ["http://www.baidu.com/img/bd_logo.png",
-                      "https://gips3.baidu.com/it/u=1821127123,1149655687&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280"]
+        image_urls = ["https://pic1.zhimg.com/v2-6651e8abb39adde6e95d33665e524f12_b.webp"]
         push_to_session(
             session_id,
             SSEEvent.FINAL,  # 显示图片
@@ -179,7 +178,7 @@ def get_history(session_id:str,limit:int = 10):
                   text=message.get("text"),
                   rewritten_query=message.get("rewritten_query"),
                   item_names = message.get("item_names"),
-                  image_urls = message.get("image_urls"),
+                  image_urls = message.get("image_urls") or [],
                   ts =message.get("ts")
               )
               for message in  message_list
