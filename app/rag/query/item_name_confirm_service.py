@@ -159,7 +159,7 @@ def confirm_item_name(state: QueryGraphState) -> QueryGraphState:
     validate(session_id, original_query)
 
     histories = history_repository.list_recent(session_id=session_id)
-    history_messages = [item for item in histories if item["item_names"] and len(item['item_names']) > 0]
+    history_messages = [item for item in histories if item.get("item_names") and len(item.get('item_names')) > 0]
 
     # 假装存储数据
     history_repository.save_message(session_id=state['session_id'], role="user",
