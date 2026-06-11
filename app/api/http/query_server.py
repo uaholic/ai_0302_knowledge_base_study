@@ -90,16 +90,18 @@ def invoke_query_graph(session_id:str,query:str,is_stream:bool=False):
 
         logger.info(f"执行结束,执行结果为:{result_state}")
         update_task_status(session_id,TASK_STATUS_COMPLETED,is_stream)
-        image_urls = ["https://pic1.zhimg.com/v2-6651e8abb39adde6e95d33665e524f12_b.webp"]
-        push_to_session(
-            session_id,
-            SSEEvent.FINAL,  # 显示图片
-            {
-                "answer": result_state['answer'],
-                "status": "completed",
-                "image_urls": image_urls
-            }
-        )
+        image_urls = result_state.get("image_urls", [])
+        image_urls.append("https://pic1.zhimg.com/v2-6651e8abb39adde6e95d33665e524f12_b.webp")
+        if is_stream:
+            push_to_session(
+                session_id,
+                SSEEvent.FINAL,  # 显示图片
+                {
+                    "answer": result_state['answer'],
+                    "status": "completed",
+                    "image_urls": image_urls,
+                }
+            )
 
         return result_state
 

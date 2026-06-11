@@ -53,9 +53,6 @@ def use_rrf_chunks_list(chunks_list:list[tuple[float,dict]], limit:int=5, k:int=
     return rrf_chunks
 
 
-
-
-
 def fuse_by_rrf(state: QueryGraphState) :
     """
     RRF 融合服务：
